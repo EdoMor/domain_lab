@@ -8,7 +8,7 @@ LAB_IMAGES = "lab_images/"
 PATH = str(Path().absolute()) + '\\'
 
 
-def get_B_H_point(B=0, exposer_time=-6):
+def get_H_M_point(H=0, exposer_time=-6):
     cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cam.set(cv2.CAP_PROP_EXPOSURE, exposer_time)
     ret, frame = cam.read()
@@ -17,10 +17,10 @@ def get_B_H_point(B=0, exposer_time=-6):
         return
     # frame = cv2.imread('test.png', 2)  # test
     cv2.imwrite(PATH + TEMP, frame)
-    name = process(PATH, TEMP, B)
+    name = process(PATH, TEMP, H)
     remove(PATH + TEMP)  # remove temp
     cv2.imwrite(PATH + LAB_IMAGES + name, frame)
 
 
 if __name__ == '__main__':
-    get_B_H_point()
+    get_H_M_point()

@@ -22,21 +22,17 @@ def enhance(img: Image) -> Image:
     return img
 
 
-def find_H(img: Image) -> float:
-    H = np.average(np.array(img))
-    return H
-
-
-def file_name_T_B_H(img: Image, B: float) -> str:
+def file_name_T_H_M(img: Image, H: float) -> str:
     now = datetime.datetime.now()
     time = str(now.month) + '_' + str(now.day) + '_' + str(now.time()).replace('.', '_').replace(':', '_')
-    H = find_H(img)
-    return f'{time}_{B}_{H}.png'
+    M = np.average(np.array(img))
+
+    return f'{time}_{H}_{M}.png'
 
 
-def process(path, temp, B: float) -> str:
+def process(path, temp, H: float) -> str:
     img = Image.open(path + temp)
     img = enhance(img)
-    name = file_name_T_B_H(img, B)
+    name = file_name_T_H_M(img, H)
     img.save(path + PREPROCESSED + name)
     return name
