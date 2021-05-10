@@ -2,10 +2,13 @@ import pyvisa
 import time
 import numpy as np
 import threading
+import matplotlib.pyplot as plt
+from matplotlib import animation
 
 
 class Device:
     def __init__(self, idx=None, min_volt=-6, max_volt=6):
+        self.scope = False
         self.rm = pyvisa.ResourceManager()
         if idx == None:
             for i in range(len(self.rm.list_resources())):
@@ -23,18 +26,21 @@ class Device:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.t.join()
+        # self.t.join()
         try:
             self.resource.write('OUTPUT OFF')
             self.resource.query('SYSTem:LOCal')
         except pyvisa.errors.VisaIOError:
             pass
         self.rm.close()
+        # time.sleep(5)
+        # exit(0)
 
-    def threaded(fn):
-        def wrapper(self, dt):
-            self.t = threading.Thread(target=fn, args=(self, dt,)).start()
-        return wrapper
+    # def threaded(fn):
+    #     def wrapper(self, dt):
+    #         self.t = threading.Thread(target=fn, args=(self, dt,)).start()
+    #
+    #     return wrapper
 
     # def scorce_status(self):
     #     status=
@@ -54,7 +60,7 @@ class Device:
         :return: voltage measured at output
         '''
         self.resource.write('*WAI')
-        return self.resource.query('MEASURE:VOLTAGE?')
+        return float(self.resource.query('MEASURE:VOLTAGE?'))
 
     def set_voltage(self, voltage):
         '''
@@ -69,20 +75,43 @@ class Device:
         except:
             raise RuntimeError('unable to set voltage')
 
-    def set_fn(self, function: np.array, t: np.array):  # TODO: add surge protect
-
-        self.set_voltage(function[0])
-        for i in range(1, len(function[1:])):
-            time.sleep(float(t[i] - t[i - 1]))
+    def set_fn(self, function: np.array, t: np.array, hook=None, args=None):  # TODO: add surge protect
+        hook_values = []
+        tv_values=[]
+        start = time.time()
+        def hooks():
+            if hook != None:
+                if args != None:
+                    hook_values.append(hook(*args))
+                else:
+                    hook_values.append(hook())  # TODO: add filesave option
+        for i in range(len(function)):
             self.set_voltage(function[i])  # TODO: add handling for failure of set_voltage in a function
+            while True:
+                t, v = (time.time() - start, self.get_voltage())
+                if self.scope == True:
+                    print(t, v)
+                    tv_values.append((t,v))
+                    plt.plot(t, v, 'k.')
+                    hooks()
+                    plt.pause(0.001)
+                else:
+                    print(t, v)
+                    tv_values.append((t,v))
+                    hooks()
+                    time.sleep(0.001)
 
-    @threaded
-    def scope(self, dt):
-        t = 0
-        while True:
-            print(t, self.get_voltage())
-            t += dt
-            time.sleep(dt)
+                if np.isclose(v, function[i], 1e-2):
+                    break
+        return hook_values,tv_values
+
+    # @threaded
+    # def scope(self, dt):
+    #     t = 0
+    #     while True:
+    #         print(t, self.get_voltage())
+    #         t += dt
+    #         time.sleep(dt)
 
     def command_status(self):
         '''
