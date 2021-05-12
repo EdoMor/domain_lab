@@ -16,7 +16,7 @@ def get_B_H_point(B=0, exposer_time=-4, debug=False):  # TODO: fix resolution an
     cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cam.set(cv2.CAP_PROP_EXPOSURE, exposer_time)
     # todo:
-    if debug:
+    if False:  # debug:
         while True:
             ret, frame = cam.read()
             if not ret:
@@ -30,7 +30,7 @@ def get_B_H_point(B=0, exposer_time=-4, debug=False):  # TODO: fix resolution an
         if not ret:
             print('failed to grab image')
             return
-        # frame = cv2.imread('test.png', 2)  # todo temp
+        frame = cv2.imread('test.png', 2)  # todo temp
 
     cv2.imwrite(PATH + TEMP, frame)
     name = process(PATH, TEMP, B)

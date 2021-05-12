@@ -22,17 +22,17 @@ def enhance(img: Image) -> Image:
     return img
 
 
-def file_name_T_H_M(img: Image, H: float) -> str:
+def file_name_T_H_M(img: Image, H: float) -> tuple:
     now = datetime.datetime.now()
     time = str(now.month) + '_' + str(now.day) + '_' + str(now.time()).replace('.', '_').replace(':', '_')
     M = np.average(np.array(img))
 
-    return f'{time}_{H}_{M}.png'
+    return f'{time}_{H}_{M}.png', f'{time}_{H}_.png'
 
 
 def process(path, temp, H: float) -> str:
     img = Image.open(path + temp)
     img = enhance(img)
-    name = file_name_T_H_M(img, H)
-    img.save(path + PREPROCESSED + name)
-    return name
+    name_p, name_r = file_name_T_H_M(img, H)
+    img.save(path + PREPROCESSED + name_p)
+    return name_r
