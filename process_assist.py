@@ -2,8 +2,6 @@ from PIL import Image, ImageEnhance
 import numpy as np
 import datetime
 
-PREPROCESSED = "lab_images_preprocessed/"
-
 
 def enhance(img: Image) -> Image:
     chopsize = 50
@@ -22,17 +20,19 @@ def enhance(img: Image) -> Image:
     return img
 
 
-def file_name_T_H_M(img: Image, H: float) -> tuple:
+def file_name_T_H_M(img: Image, H: float, counter=None) -> tuple:
     now = datetime.datetime.now()
-    time = str(now.month) + '_' + str(now.day) + '_' + str(now.time()).replace('.', '_').replace(':', '_')
+    # str(now.month) + '_' + str(now.day) + '_' +
+    time = str(now.day) + '_' + str(now.time()).replace('.', '_').replace(':', '_')
+    time = time if counter is None else counter
     M = np.average(np.array(img))
 
     return f'{time}_{H}_{M}.png', f'{time}_{H}_.png'
 
 
-def process(path, temp, H: float) -> str:
+def process(path, temp, H: float, folder_name: str, counter=None) -> str:
     img = Image.open(path + temp)
     img = enhance(img)
-    name_p, name_r = file_name_T_H_M(img, H)
-    img.save(path + PREPROCESSED + name_p)
+    name_p, name_r = file_name_T_H_M(img, H, counter)
+    img.save(path + folder_name + name_p)
     return name_r
