@@ -1,9 +1,9 @@
 import cv2
+import matplotlib.pyplot as plt
+import numpy as np
 from os import remove
 from pathlib import Path
 from process_assist import process
-import matplotlib.pyplot as plt
-import numpy as np
 
 TEMP = "temp.png"
 LAB_IMAGES_RAW = "lab_images_raw/"
