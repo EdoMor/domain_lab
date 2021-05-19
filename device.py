@@ -26,10 +26,15 @@ class Device:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # self.resource.write('OUTPUT OFF')
-        # self.resource.query('SYStem:LOCal')
-        # print(self.resource.query('SYStem:ERRor?'))
+        # self.t.join()
+        try:
+            self.resource.write('OUTPUT OFF')
+            self.resource.query('SYSTem:LOCal')
+        except pyvisa.errors.VisaIOError:
+            pass
         self.rm.close()
+        # time.sleep(5)
+        # exit(0)
 
     # def threaded(fn):
     #     def wrapper(self, dt):
@@ -54,8 +59,8 @@ class Device:
 
         :return: voltage measured at output
         '''
-        # self.resource.write('*WAI')
-        return float(self.resource.query('APPLY?').replace('"','').split(',')[-1].lower())
+        self.resource.write('*WAI')
+        return float(self.resource.query('MEASURE:VOLTAGE?'))
 
     def set_voltage(self, voltage):
         '''
@@ -63,12 +68,9 @@ class Device:
         :param voltage: target voltage (in volts)
         :return: 0 if command was successful and otherwise 1
         '''
-        if np.absolute(voltage) >5:
-            print('voltage to high/low')
-            exit(1)
         try:
             self.resource.write('*WAI')
-            self.resource.write('APPLy:DC DEF, DEF, {} V'.format(voltage))
+            self.resource.write('VOLTAGE {}V'.format(voltage))
             return 0
         except:
             raise RuntimeError('unable to set voltage')
