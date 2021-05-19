@@ -1,47 +1,44 @@
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 from os import remove
 from pathlib import Path
 from process_assist import process
+import matplotlib.pyplot as plt
+import numpy as np
 
 TEMP = "temp.png"
-LAB_IMAGES_RAW = "lab_images_raw/"
-PROCESSED = "lab_images_processed/"
-FROM_RAW = 'from_raw/'
+LAB_IMAGES = "lab_images/"
 PATH = "./"
 
 
 # TODO: add dirtree structure for differentiationg between runs noting their order
 
-def get_B_H_point(H=0, exposer_time=-4, counter=None):  # TODO: fix resolution and grab area
+def get_B_H_point(B=0, exposer_time=-4, debug=False):  # TODO: fix resolution and grab area
     cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cam.set(cv2.CAP_PROP_EXPOSURE, exposer_time)
-    # todo:
-    # if False:  # debug:
-    #     while True:
-    #         ret, frame = cam.read()
-    #         if not ret:
-    #             print('failed to grab image')
-    #             exit(1)
-    #         plt.ion()
-    #         plt.imshow(np.array(frame))
-    #         plt.pause(0.05)
-    # else:
-    ret, frame = cam.read()
-    if not ret:
-        print('failed to grab image')
-        return
-    # frame = cv2.imread(test.png', 2)  # for testing
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+
+#    todo:
+    if debug:
+        while True:
+            ret, frame = cam.read()
+            if not ret:
+                print('failed to grab image')
+                exit(1)
+            plt.ion()
+            plt.imshow(np.array(frame))
+            plt.pause(0.05)
+    else:
+        ret, frame = cam.read()
+        if not ret:
+            print('failed to grab image')
+            return
+    # frame = cv2.imread('lab_images//5_12_09_05_23_378123_0_0.808955078125.png', 2)  # todo temp
 
     cv2.imwrite(PATH + TEMP, frame)
-    name = process(PATH, TEMP, H, PROCESSED)
-    cv2.imwrite(PATH + LAB_IMAGES_RAW + name, frame)  # TODO: add return of (B,H) point
-    # new code
-    frame = cv2.imread(PATH + LAB_IMAGES_RAW + name, 2)
-    cv2.imwrite(PATH + TEMP, frame)
-    process(PATH, TEMP, H, FROM_RAW, counter)
+    name = process(PATH, TEMP, B)
+    cv2.imwrite(PATH + LAB_IMAGES + name, frame)  # TODO: add return of (B,H) point
 
 
 if __name__ == '__main__':
-    get_B_H_point(exposer_time=-10)
+    get_B_H_point(exposer_time=-4,debug=True)
