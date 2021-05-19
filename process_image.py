@@ -44,4 +44,4 @@ def get_B_H_point(H=0, exposer_time=-4, counter=None):  # TODO: fix resolution a
 
 
 if __name__ == '__main__':
-    get_B_H_point(exposer_time=-10)
+    get_B_H_point(exposer_time=-2)
