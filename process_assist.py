@@ -43,11 +43,11 @@ def file_name_T_H_M(img: Image, H: float, counter=None) -> tuple:
     time = time if counter is None else counter
     M = np.average(np.array(img))
 
-    return f'C{time}_H{H}_M{M}.png', f'C{time}_H{H}_M{M}.png'
+    return f'C{time}_H{H}_M{M}.png'
 
 
 def process(path, folder_name: str, img, H: float, counter=None) -> str:
     img = new_enhance(img)
-    name_p, name_r = file_name_T_H_M(img, H, counter)
-    img.save(path + folder_name + name_p)
-    return name_r
+    name = file_name_T_H_M(img, H, counter)
+    img.save(path + folder_name + name)
+    return name
