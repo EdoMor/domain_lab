@@ -27,6 +27,7 @@ def make_run_files(run_name: Optional[str] = None):
     processed_files_name_to_copy = os.listdir(COPY_PROCESSED_IMG_FROM_THIS_PATH)
     raw_files_name_to_copy = os.listdir(COPY_RAW_IMG_FROM_THIS_PATH)
 
+
     for f in processed_files_name_to_copy:
         shutil.copy(COPY_PROCESSED_IMG_FROM_THIS_PATH + f, folder_name+'/pressed')
         os.remove(COPY_PROCESSED_IMG_FROM_THIS_PATH + f)
@@ -34,6 +35,7 @@ def make_run_files(run_name: Optional[str] = None):
         shutil.copy(COPY_RAW_IMG_FROM_THIS_PATH + f, folder_name + '/raw')
         os.remove(COPY_RAW_IMG_FROM_THIS_PATH + f)
 
+    return folder_name
 
 if __name__ == '__main__':
     make_run_files()

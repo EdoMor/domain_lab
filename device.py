@@ -26,15 +26,10 @@ class Device:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # self.t.join()
-        try:
-            self.resource.write('OUTPUT OFF')
-            self.resource.query('SYSTem:LOCal')
-        except pyvisa.errors.VisaIOError:
-            pass
+        # self.resource.write('OUTPUT OFF')
+        # self.resource.query('SYStem:LOCal')
+        # print(self.resource.query('SYStem:ERRor?'))
         self.rm.close()
-        # time.sleep(5)
-        # exit(0)
 
     # def threaded(fn):
     #     def wrapper(self, dt):
@@ -59,8 +54,8 @@ class Device:
 
         :return: voltage measured at output
         '''
-        self.resource.write('*WAI')
-        return float(self.resource.query('MEASURE:VOLTAGE?'))
+        # self.resource.write('*WAI')
+        return float(self.resource.query('APPLY?').replace('"','').split(',')[-1].lower())
 
     def set_voltage(self, voltage):
         '''
@@ -70,7 +65,7 @@ class Device:
         '''
         try:
             self.resource.write('*WAI')
-            self.resource.write('VOLTAGE {}V'.format(voltage))
+            self.resource.write('APPLy:DC DEF, DEF, {} V'.format(voltage))
             return 0
         except:
             raise RuntimeError('unable to set voltage')
@@ -82,27 +77,28 @@ class Device:
         def hooks():
             if hook != None:
                 if args != None:
-                    hook_values.append(hook(*args))
+                    try:
+                        a=self.get_voltage()
+                        hook_values.append(hook(a)) #TODO: reconnecto args!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    except:
+                        raise NameError('broken function in device.py line 82 go in there and change variable "a" back to "*args" and figure out how to evaluate pps.get_vlotage() inside set_fn() ')
                 else:
                     hook_values.append(hook())  # TODO: add filesave option
         for i in range(len(function)):
             self.set_voltage(function[i])  # TODO: add handling for failure of set_voltage in a function
-            while True:
-                t, v = (time.time() - start, self.get_voltage())
-                if self.scope == True:
-                    print(t, v)
-                    tv_values.append((t,v))
-                    plt.plot(t, v, 'k.')
-                    hooks()
-                    plt.pause(0.001)
-                else:
-                    print(t, v)
-                    tv_values.append((t,v))
-                    hooks()
-                    time.sleep(0.001)
+            t, v = (time.time() - start, self.get_voltage())
+            if self.scope == True:
+                print(t, v)
+                tv_values.append((t,v))
+                plt.plot(t, v, 'k.')
+                hooks()
+                plt.pause(0.001)
+            else:
+                print(t, v)
+                tv_values.append((t,v))
+                hooks()
+                time.sleep(0.001)
 
-                if np.isclose(v, function[i], 1e-2):
-                    break
         return hook_values,tv_values
 
     # @threaded
