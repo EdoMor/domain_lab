@@ -41,12 +41,12 @@ def get_H_B_point(H: float = 0, exposer_time: int = -4, counter: int = None, run
     except:
         print('problem with setting the camera')
 
-    # ret, frame = cam.read()
-    # if not ret:
-    #     print('failed to grab image')
-    #     return False
+    ret, frame = cam.read()
+    if not ret:
+        print('failed to grab image')
+        return False
 
-    frame = cv2.imread('./stu_test.png')  # for testing
+    # frame = cv2.imread('./stu_test.png')  # for testing
 
     try:
         name = process(dirName, PROCESSED, frame, H, counter)
