@@ -4,6 +4,7 @@ import numpy as np
 import threading
 import matplotlib.pyplot as plt
 from matplotlib import animation
+import types
 
 
 class Device:
@@ -75,15 +76,23 @@ class Device:
         tv_values=[]
         start = time.time()
         def hooks():
-            if hook != None:
-                if args != None:
-                    try:
-                        a=self.get_voltage()
-                        hook_values.append(hook(a)) #TODO: reconnecto args!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    except:
-                        raise NameError('broken function in device.py line 82 go in there and change variable "a" back to "*args" and figure out how to evaluate pps.get_vlotage() inside set_fn() ')
-                else:
-                    hook_values.append(hook())  # TODO: add filesave option
+            # if hook != None:
+            #     if args != None:
+            #         try:
+            #             a=self.get_voltage()
+            #             hook_values.append(hook(a)) #TODO: reconnecto args!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #         except:
+            #             raise NameError('broken function in device.py line 82 go in there and change variable "a" back to "*args" and figure out how to evaluate pps.get_vlotage() inside set_fn() ')
+            #     else:
+            #         hook_values.append(hook())  # TODO: add filesave option
+            if hook!=None:#                                ^
+                a=[]#                                      |
+                for arg in args:#                          |
+                    if type(arg)==types.FunctionType:#     |
+                        a.append(arg())#                   |
+                    else:#                                 |
+                        a.append(arg)#                     |
+            hook_values.append(hook(*a))     #fix fot this | needs checking
         for i in range(len(function)):
             self.set_voltage(function[i])  # TODO: add handling for failure of set_voltage in a function
             t, v = (time.time() - start, self.get_voltage())

@@ -32,7 +32,7 @@ def main():
         #     plt.plot(t,f)
         # plt.show()
         # print(len(paramfam))
-            h, vt = pps.set_fn(f, t, get_B_H_point, [pps.get_voltage()])
+            h, vt = pps.set_fn(f, t, get_B_H_point, [pps.get_voltage])
             fname = make_run_files()
             with open(fname + '/voltage points.txt', 'w') as fo:
                 for i in vt:
