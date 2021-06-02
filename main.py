@@ -3,15 +3,14 @@ import device as dev
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from process_image import get_B_H_point
+from process_image import get_H_B_point
 from run_files import make_run_files
 
 
 def sin4(x, a, b, c, d):
     return a * np.sin(b * x) + c * np.sin(d * x)
 
-
-def main():
+def multirun():
     with device.Device(0) as pps:
         print(pps.id)
         paramfam = []
@@ -32,7 +31,7 @@ def main():
         #     plt.plot(t,f)
         # plt.show()
         # print(len(paramfam))
-            h, vt = pps.set_fn(f, t, get_B_H_point, [pps.get_voltage])
+            h, vt = pps.set_fn(f, t, get_H_B_point, [pps.get_voltage])
             fname = make_run_files()
             with open(fname + '/voltage points.txt', 'w') as fo:
                 for i in vt:
@@ -40,6 +39,17 @@ def main():
             print('done with run: ',ccccc)
             ccccc+=1
         pps.set_voltage(0)
+
+def main():
+    # t=np.arange(0,10,10)
+    # plt.plot(t,sin4(t,5,1,1.5,100),'.')
+    # plt.pause(0.001)
+    # with device.Device(0) as pps:
+        # print(pps.id)
+        # f = sin4(t, *[5,1,1.5,100])
+        # pps.set_fn(f, t, get_H_B_point, [pps.get_voltage])
+    get_H_B_point()
+
 
 
 if __name__ == '__main__':

@@ -5,17 +5,23 @@ import threading
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import types
-
+import process_image
+import constants
 
 class Device:
     def __init__(self, idx=None, min_volt=-6, max_volt=6):
+        self.min_volt=min_volt
+        self.max_volt=max_volt
         self.scope = False
         self.rm = pyvisa.ResourceManager()
         if idx == None:
             for i in range(len(self.rm.list_resources())):
                 print(str(i) + ')\t' + self.rm.list_resources()[i])
             idx = int(input('choose device: '))
-        self.address = self.rm.list_resources()[idx]
+        try:
+            self.address = self.rm.list_resources()[idx]
+        except pyvisa.errors.VisaIOError:
+            raise RuntimeError("device not detected make sure it's actually connected this time")
         self.resource = self.rm.open_resource(self.address)
         self.resource.timeout = 10000
         self.resource.read_termination = '\n'
@@ -72,6 +78,7 @@ class Device:
             raise RuntimeError('unable to set voltage')
 
     def set_fn(self, function: np.array, t: np.array, hook=None, args=None):  # TODO: add surge protect
+        process_image.incument_run(constants.ROOT,constants.RUNFILE)
         hook_values = []
         tv_values=[]
         start = time.time()
@@ -86,28 +93,29 @@ class Device:
             #     else:
             #         hook_values.append(hook())  # TODO: add filesave option
             if hook!=None:#                                ^
-                a=[]#                                      |
-                for arg in args:#                          |
-                    if type(arg)==types.FunctionType:#     |
-                        a.append(arg())#                   |
+                a=[0]*len(args)#                           |
+                for i in range(len(args)):#                |
+                    if type(args[i])==types.MethodType:#   |
+                        a[i]=args[i]()#                    |
                     else:#                                 |
-                        a.append(arg)#                     |
-            hook_values.append(hook(*a))     #fix fot this | needs checking
+                        a[i]=args[i]#                      |
+            hook(*a)
+            # hook_values.append(b)          #fix fot this | needs checking # stopped uppending need to remove line
+            # !!!!!!!!!!!!!!!!!!!!!!!!!! removing line may break code !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         for i in range(len(function)):
             self.set_voltage(function[i])  # TODO: add handling for failure of set_voltage in a function
             t, v = (time.time() - start, self.get_voltage())
             if self.scope == True:
-                print(t, v)
-                tv_values.append((t,v))
-                plt.plot(t, v, 'k.')
                 hooks()
+                print(t, v)
+                # tv_values.append((t,v))
+                plt.plot(t, v, 'k.')
                 plt.pause(0.001)
             else:
-                print(t, v)
-                tv_values.append((t,v))
                 hooks()
+                print(t, v)
+                # tv_values.append((t,v))
                 time.sleep(0.001)
-
         return hook_values,tv_values
 
     # @threaded
