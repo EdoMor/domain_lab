@@ -50,7 +50,7 @@ def get_run(path, file):
 
 def incument_run(path, file):
     filepath = os.path.join(path, file)
-    run = get_run(filepath)
+    run = get_run(path, file)
     with open(filepath, 'w') as fo:
         fo.write(str(run + 1))
     return True
@@ -84,8 +84,8 @@ def get_H_B_point(H: float = 0, exposer_time: int = -4, counter: int = None, run
 
     try:
         cam.set(cv2.CAP_PROP_EXPOSURE, exposer_time)
-        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1000)
-        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1000)
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
     except:
         print('problem with setting the camera')
 

@@ -48,7 +48,7 @@ class Device:
     #     status=
     #     return status
 
-    def toggel_scorce(self):
+    def toggel_scorce(self): #not implemented correctly
         if self.scorce:
             self.resource.write('OUTPUT OFF')
             self.scorce = False
@@ -56,7 +56,7 @@ class Device:
             self.resource.write('OUTPUT ON')
             self.scorce = True
 
-    def get_voltage(self):
+    def get_voltage(self) -> float:
         '''
 
         :return: voltage measured at output
@@ -64,7 +64,7 @@ class Device:
         # self.resource.write('*WAI')
         return float(self.resource.query('APPLY?').replace('"','').split(',')[-1].lower())
 
-    def set_voltage(self, voltage):
+    def set_voltage(self, voltage: float):
         '''
 
         :param voltage: target voltage (in volts)
@@ -77,7 +77,15 @@ class Device:
         except:
             raise RuntimeError('unable to set voltage')
 
-    def set_fn(self, function: np.array, t: np.array, hook=None, args=None):  # TODO: add surge protect
+    def set_fn(self, function: np.array, t: np.array, hook=None, args:list =None):  # TODO: add surge protect
+        '''
+
+        :param function:
+        :param t:
+        :param hook:
+        :param args:
+        :return:
+        '''
         process_image.incument_run(constants.ROOT,constants.RUNFILE)
         hook_values = []
         tv_values=[]

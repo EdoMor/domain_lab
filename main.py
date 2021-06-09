@@ -7,50 +7,70 @@ from process_image import get_H_B_point
 from run_files import make_run_files
 
 
-def sin4(x, a, b, c, d):
-    return a * np.sin(b * x) + c * np.sin(d * x)
+def sin4(x, a, b):
+    if max(a*np.sin(x)+b)>=4.1:
+        return 4.1*(a*np.sin(x)+b)/max((a*np.sin(x)+b))
+    if min(a*np.sin(x)+b)<=-4.1:
+        return 4.1 * (a * np.sin(x) + b) / abs(min((a * np.sin(x) + b)))
+    return (a * np.sin(x) + b)
 
 def multirun():
+    paramfam = [[4.1,0]]
+    for a in np.linspace(0.5,4.1,20):
+            for b in np.linspace(-4.1,4.1,20):
+                paramfam.append([a, b])
+    # print(len(paramfam))
+    # for params in paramfam:
+    #     t = np.arange(0, 10 * np.pi, 0.1)
+    #     f = sin4(t, *params)
+    #     plt.plot(t, f, '.')
+    #     plt.ylim([-4.2,4.2])
+    #     plt.pause(0.001)
+    #     plt.clf()
+    # exit(0)
     with device.Device(0) as pps:
         print(pps.id)
-        paramfam = []
-        n = 5
-        for i in range(n):
-            for j in range(n):
-                for k in range(n):
-                    for l in range(n):
-                        a = np.arange(1, 5, 4 / n)[i]
-                        c = np.arange(0, 1, 1 / n)[j]
-                        b = np.arange(1, 1.5, 0.5 / n)[k]
-                        d = np.arange(0, 30, 30 / n)[l]
-                        paramfam.append([a, b, c, d])
         ccccc=0
         for params in paramfam:
-            t = np.arange(0, 2 * np.pi, 0.1)
+            t = np.arange(0, 10 * np.pi, 0.315)
             f = sin4(t, *params)
-        #     plt.plot(t,f)
-        # plt.show()
-        # print(len(paramfam))
-            h, vt = pps.set_fn(f, t, get_H_B_point, [pps.get_voltage])
-            fname = make_run_files()
-            with open(fname + '/voltage points.txt', 'w') as fo:
-                for i in vt:
-                    fo.write(str(i) + '\n')
+            pps.set_fn(f, t, get_H_B_point, [pps.get_voltage])
             print('done with run: ',ccccc)
             ccccc+=1
         pps.set_voltage(0)
 
+
+def f_fam(x, p, b):
+    a = 4.1/(1+p)
+    return a*np.sin(x) + a*p*np.sin(b*x)
+
+def run():
+    p_range = np.arange(0, 1, 0.04)
+    b_range = np.arange(0, 50, 2)
+
+    with device.Device() as dw:
+        run_count = 0
+        for p in p_range:
+            for b in b_range:
+                x = np.arange(0, 2.5 * np.pi, 2.5 * np.pi / (b * 10 + 100 / (b+1)))
+                f = f_fam(x, p, b)
+                dw.set_fn(f, x, get_H_B_point, [dw.get_voltage])
+                print('done with run: ', run_count)
+                run_count += 1
+        dw.set_voltage(0)
+
 def main():
-    # t=np.arange(0,10,10)
-    # plt.plot(t,sin4(t,5,1,1.5,100),'.')
-    # plt.pause(0.001)
-    # with device.Device(0) as pps:
-        # print(pps.id)
-        # f = sin4(t, *[5,1,1.5,100])
-        # pps.set_fn(f, t, get_H_B_point, [pps.get_voltage])
-    get_H_B_point()
+    with device.Device(0) as dw:
+        b=0
+        p=0
+        x = np.arange(0, 2.5 * np.pi, 2.5 * np.pi / (b * 10 + 100 / (b+1)))
+        f = f_fam(x, p, b)
+        dw.set_fn(f,x,get_H_B_point,[dw.get_voltage])
+        dw.set_voltage(0)
 
 
 
 if __name__ == '__main__':
-    main()
+    multirun()
+
+
