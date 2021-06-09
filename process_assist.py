@@ -4,6 +4,7 @@ import datetime
 import cv2
 import os
 import constants
+from process_image import mkdir
 
 RAW = constants.RAW
 PROCESSED = constants.PROCESSED
@@ -66,6 +67,32 @@ def scan_and_process(runs_path: str = './runs'):  # TODO: Deal with folders that
                 process(join(runs_path, filename, PROCESSED))
                 processed_set.add(filename)
 # TODO: get processed_set (after forced ending)
+
+## loud_data() returns 2 np arrays:
+## 1) data : data[i] is a list of al the images in run_i, as np arrays
+## 2) T_H_B_of_data : data[i][j] is the list: [T,H,B] of the j-th img in run_i
+
+
+def loud_data(runs_path : str = './runs'):
+    runs = os.listdir(runs_path)
+    data = np.empty([1, len(runs)])
+    T_H_B_of_data = np.empty([1, len(runs)])
+    for i, run_folder in enumerate(runs):
+        run_images_path = join(runs_path, run_folder, PROCESSED)
+        run_images = os.listdir(run_images_path)
+        run_data = np.empty([1, len(run_images)])
+        T_H_B_of_run_data = np.empty([1, len(run_images)])
+        for j, img in enumerate(run_images):
+            run_data[j] = np.asarray(Image.open(join(run_images_path, img)))
+            T_H_B_of_run_data[j] = img.split('_')
+        data[i] = run_data
+        T_H_B_of_run_data[i] = T_H_B_of_run_data
+    return data, T_H_B_of_data
+
+
+
+
+
 
 
 if __name__ == '__main__':
