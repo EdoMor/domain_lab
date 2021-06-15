@@ -90,10 +90,36 @@ def loud_data(runs_path : str = './runs'):
     return data, T_H_B_of_data
 
 
+def gray_and_blurr(img, blurr:bool=True):
+    gray_img = cv2.cvtColor(np.asarray(img), cv2.COLOR_BGR2GRAY)
+    if blurr:
+        gray_img = cv2.GaussianBlur(gray_img, (21, 21), 0)
+    return gray_img
 
 
+def shmuel_process(img, dark_stu_img, light_stu_img, blur:bool=False, epsilon=0.05):
+    img, dark_stu_img, light_stu_img = gray_and_blurr(img, blur), gray_and_blurr(dark_stu_img, blur), gray_and_blurr(light_stu_img, blur)
+    if np.shape(img) != np.shape(dark_stu_img):
+        return print("error: dark-saturated image is not the same size as image")
+    if np.shape(img) != np.shape(light_stu_img):
+        return print("error: light-saturated image is not the same size as image")
+    img_op = (img) / dark_stu_img  # TODO return -light_stu_img
+
+    height, width = np.shape(img)
+    None_img = img_op.copy()
+    av = np.average(img_op)
+    for j in range(width):
+        for i in range(height):
+            if np.abs(img_op[i][j] - av) <= epsilon:
+                None_img[i][j] = 0
+
+    _, img_thresh = cv2.threshold(img_op, av, 255, cv2.THRESH_BINARY)
+    _, None_img_thresh = cv2.threshold(None_img, np.average(None_img), 255, cv2.THRESH_BINARY)
+
+    return np.average(None_img_thresh), img_thresh, None_img_thresh
 
 
 
 if __name__ == '__main__':
     scan_and_process()
+
