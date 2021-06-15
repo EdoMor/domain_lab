@@ -4,17 +4,17 @@ import datetime
 import cv2
 import os
 import constants
-from process_image import mkdir
 
-RAW = constants.RAW
-PROCESSED = constants.PROCESSED
+JRAW = constants.JRAW
+JPROCESSED = constants.JPROCESSED
 join = os.path.join
 
 
-def detect_color(img):
+def detect_color(img): #TODO: normalize image and widen color range
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # mask = cv2.inRange(hsv, (115, 115, 20), (165, 255, 255))
     mask = cv2.inRange(hsv, (115, 105, 20), (175, 255, 255))
+    # mask = cv2.inRange(hsv, (125, 255*0.6, 255*0.2), (175, 255*0.8, 255*0.8))
     image = cv2.bitwise_not(mask)
     return image
 
@@ -40,12 +40,18 @@ def file_name_T_H_M(img: Image, H: float, counter=None) -> str:
     return f'C{time}_H{H}_M{M}.png'
 
 
+def image_process(source_path):
+    destination_path = source_path.replace('raw', 'processed')  # TODO protect agaist 'raw' apearing more then once
+    img = cv2.imread(source_path)
+    img = detect_color(img)
+    img = clear_dots(img)
+    M = np.average(np.array(img))
+    cv2.imwrite(destination_path.replace('.png','_'+str(M)+'.png').replace('/','\\'), img)
+
+
 def process(run_path: str):
-    for filename in os.listdir(join(run_path, RAW)):
-        img = cv2.imread(join(run_path, RAW, filename))
-        img = detect_color(img)
-        img = clear_dots(img)
-        cv2.imwrite(join(run_path, PROCESSED, filename), img)
+    for filename in os.listdir(join(run_path, JRAW)):
+        image_process(join(run_path, JRAW, filename))
 
 
 def is_empty_folder(path: str) -> bool:
@@ -61,11 +67,13 @@ def is_empty_folder(path: str) -> bool:
 def scan_and_process(runs_path: str = './runs'):  # TODO: Deal with folders that are half full
     processed_set = set()
     while True:
-        unprocessed_set = set(os.listdir(runs_path))-processed_set
+        unprocessed_set = set(os.listdir(runs_path)) - processed_set
         for filename in unprocessed_set:
-            if is_empty_folder(join(runs_path, filename, PROCESSED)):
-                process(join(runs_path, filename, PROCESSED))
+            if is_empty_folder(join(runs_path, filename, JPROCESSED)):
+                process(join(runs_path, filename, JPROCESSED))
                 processed_set.add(filename)
+
+
 # TODO: get processed_set (after forced ending)
 
 ## loud_data() returns 2 np arrays:
@@ -73,12 +81,12 @@ def scan_and_process(runs_path: str = './runs'):  # TODO: Deal with folders that
 ## 2) T_H_B_of_data : data[i][j] is the list: [T,H,B] of the j-th img in run_i
 
 
-def loud_data(runs_path : str = './runs'):
+def loud_data(runs_path: str = './runs'):
     runs = os.listdir(runs_path)
     data = np.empty([1, len(runs)])
     T_H_B_of_data = np.empty([1, len(runs)])
     for i, run_folder in enumerate(runs):
-        run_images_path = join(runs_path, run_folder, PROCESSED)
+        run_images_path = join(runs_path, run_folder, JPROCESSED)
         run_images = os.listdir(run_images_path)
         run_data = np.empty([1, len(run_images)])
         T_H_B_of_run_data = np.empty([1, len(run_images)])
@@ -97,29 +105,32 @@ def gray_and_blurr(img, blurr:bool=True):
     return gray_img
 
 
-def shmuel_process(img, dark_stu_img, light_stu_img, blur:bool=False, epsilon=0.05):
-    img, dark_stu_img, light_stu_img = gray_and_blurr(img, blur), gray_and_blurr(dark_stu_img, blur), gray_and_blurr(light_stu_img, blur)
+def shmuel_process(img, dark_stu_img, blur:bool=False, epsilon=0.25):
+    img, dark_stu_img = gray_and_blurr(img, blur), gray_and_blurr(dark_stu_img, blur)
     if np.shape(img) != np.shape(dark_stu_img):
         return print("error: dark-saturated image is not the same size as image")
-    if np.shape(img) != np.shape(light_stu_img):
-        return print("error: light-saturated image is not the same size as image")
-    img_op = (img) / dark_stu_img  # TODO return -light_stu_img
+    img_op = img / dark_stu_img
+    av = np.average(img_op)
 
     height, width = np.shape(img)
-    None_img = img_op.copy()
-    av = np.average(img_op)
     for j in range(width):
         for i in range(height):
-            if np.abs(img_op[i][j] - av) <= epsilon:
-                None_img[i][j] = 0
+            if np.abs(img_op[i][j] - av) < epsilon:
+                img_op[i][j] = 0
 
-    _, img_thresh = cv2.threshold(img_op, av, 255, cv2.THRESH_BINARY)
-    _, None_img_thresh = cv2.threshold(None_img, np.average(None_img), 255, cv2.THRESH_BINARY)
+    _, img_thresh = cv2.threshold(img_op, np.average(img_op), 255, cv2.THRESH_BINARY)
 
-    return np.average(None_img_thresh), img_thresh, None_img_thresh
+    return np.average(img_thresh), img_thresh
 
 
 
 if __name__ == '__main__':
-    scan_and_process()
+    light_stu_img = cv2.imread('./runs_tor/run_55/raw/1623242427.5696151_3.90357.png')
+    dark_stu_img = cv2.imread('./runs_tor/run_55/raw/1623242448.2937782_-3.91397.png')
+    img = cv2.imread('./runs_tor/run_55/raw/1623242440.114422_-0.03447.png')
+    M, processed_image = shmuel_process(img, dark_stu_img)
+    process_image = Image.fromarray(processed_image)
+    process_image.show()
+
+
 
