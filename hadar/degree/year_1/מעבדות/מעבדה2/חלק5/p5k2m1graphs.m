@@ -1,0 +1,12 @@
+%    plot(t1,p1)
+%   plot(t2,p2)
+%   plot(t3,p3)
+%   plot(t4,p4)
+%  plot(t5,p5)
+%     plot(t6,p6)
+%      plot(t7,p7)
+      plot(t8,p8)
+%      plot(t9,p9)
+%      plot(t10,p10)
+%   plot(t11,p11)
+ 
