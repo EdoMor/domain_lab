@@ -4,7 +4,7 @@ import PIL as pl
 import numpy as np
 import pandas as pd
 from pandas import option_context
-
+import imagehash
 import process_assist
 import process_image
 import constants
@@ -14,17 +14,15 @@ import time
 
 def hashfile(path):
     img = pl.Image.open(path)
-    data = np.asarray(img).flatten()
-    m = sha512()
-    m.update(data.tobytes())
-    return m.digest()
+    m = imagehash.dhash(img).hash.flatten()
+    return int(''.join(list(m.astype(int).astype(str))), 2)
 
 
 def create_table(path):
     files = [os.path.join(root, name) for root, dirs, files in os.walk(constants.RUNFOLDER) for name in files if
              'raw' in os.path.join(root, name)]
     ptable = pd.DataFrame(columns=['hash', 'path', 'name', 'status'])
-    for i in range(len(files[1:10])):  # DEBUG ONLY REMOVE [1:10]
+    for i in range(len(files)):
         ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
     ptable.to_pickle(path)
     return (ptable, path)
@@ -60,7 +58,7 @@ def update_table_contence(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
     files = [os.path.join(root, name) for root, dirs, files in os.walk(constants.RUNFOLDER) for name in files if
              'raw' in os.path.join(root, name)]
     for i in range(len(files)):
-        if not files[i] in ptable['name']:
+        if not files[i] in list(ptable['path'].values):
             ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
     ptable.to_pickle(path)
     return (ptable, path)
@@ -83,11 +81,12 @@ def search_table(table: (pd.DataFrame, str), column: str, phrase: str) -> pd.Dat
 
 
 def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+    print('processing')
     ptable = table[0]
     path = table[1]
     for i in range(len(ptable)):
         if ptable['status'].loc[i] == 'unprocessed':
-            process_assist.process(ptable['path'].loc[i])
+            process_assist.image_process(ptable['path'].loc[i])
             ptable['status'].loc[i] = 'processed'
     ptable.to_pickle(path)
     return (ptable, path)
@@ -111,7 +110,7 @@ def get_size(start_path: str) -> int:
 def main():
     if not os.path.exists('./t1_not_a_virus'):
         create_table('./t1_not_a_virus')
-    table = option_context('./t1_not_a_virus')
+    table = open_table('./t1_not_a_virus')
     table = update_table_contence(table)
     table = update_table_status(table)
     table = process_table(table)
@@ -127,3 +126,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

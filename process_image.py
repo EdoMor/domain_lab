@@ -1,13 +1,9 @@
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-from os import remove
-from pathlib import Path
-import datetime
 import time
 import os
-from process_assist import process
 import constants
+from PIL import Image
+import numpy as np
 
 ROOT = constants.ROOT
 RAW = constants.RAW
@@ -108,6 +104,65 @@ def get_H_B_point(H: float = 0, exposer_time: int = -4, counter: int = None, run
 
     try:
         cv2.imwrite(dirName + RAW + name, frame)  # TODO: add return of (B,H) point
+    except:
+        print('could not save RAW img')
+        return False
+
+
+    return True
+
+
+
+def get_H_B_point2(H: float = 0, exposer_time: int = -4, counter: int = None, run: int = -1) -> bool:
+    run = get_run(ROOT, RUNFILE)
+    dirName = PATH + str(run)
+    try:
+        mkdir(dirName)
+    except:
+        print('did not make dir')
+        print(dirName)
+        return False
+
+    try:
+        cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    except:
+        print('video capture failed')
+        return False
+
+    try:
+        cam.set(cv2.CAP_PROP_EXPOSURE, exposer_time)
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+    except:
+        print('problem with setting the camera')
+
+    ret, frame = cam.read()
+    if not ret:
+        print('failed to grab image')
+        return False
+
+    left = 291
+    top = 80
+    right = 2100
+    bottom = 1800
+
+    frame = np.asarray(Image.fromarray(frame).crop((left, top, right, bottom)))
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # frame = cv2.imread('./stu_test.png')  # for testing
+
+    # try:
+    #     name = process(dirName, PROCESSED, frame, H, counter)
+    # except:
+    #     print('problem with process')
+    # now = datetime.datetime.now()
+    # time = str(now.day) + '_' + str(now.time()).replace('.', '_').replace(':', '_')
+    now = time.time()
+    counter = now if counter is None else counter
+    name = f'{counter}_{H}.png'
+
+    try:
+        cv2.imwrite(os.path.join(dirName, name), frame)
     except:
         print('could not save RAW img')
         return False
