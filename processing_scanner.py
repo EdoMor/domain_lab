@@ -15,9 +15,11 @@ import keyboard
 KEY_COMBO='ctrl+r+t+i+p'
 
 
-def keyboard_interrupt():
+def keyboard_interrupt(table_file):
+    print('interrupt mode[try typing help]:\n')
+    from processing_scanner import search_table
+    table,_=open_table(table_file)
     while 1:
-        print('interrupt mode[try typing help]:\n')
         uinput=input('>>> ')
         if uinput=='help':
             print ('''type help to print this
@@ -25,7 +27,13 @@ def keyboard_interrupt():
             get_size(start_path: str): -> size(int): get number of files in folder
             table,_ = open_table(table_file) -> (pd.DataFrame, str): then use [table] to see whats inside
             break(): to stop just break(), u know?''')
-        eval(uinput)
+        elif uinput=='break':
+            print('continuing')
+            break
+        try:
+            eval(uinput)
+        except:
+            print('invalid command')
 
 
 def hashfile(path):
@@ -82,7 +90,7 @@ def update_table_contence(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
             ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
             ptable.to_pickle(path)
             if keyboard.is_pressed(KEY_COMBO):
-                keyboard_interrupt()
+                keyboard_interrupt(path)
     return (ptable, path)
 
 
@@ -112,7 +120,8 @@ def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
             ptable['status'].loc[i] = 'processed'
         ptable.to_pickle(path)
         if keyboard.is_pressed(KEY_COMBO):
-            keyboard_interrupt()
+            keyboard_interrupt(path)
+    print('done processing')
     return (ptable, path)
 
 
@@ -144,7 +153,7 @@ def main():
         start=time.time()
         while time.time()-start<=(60 * 5):
             if keyboard.is_pressed(KEY_COMBO):
-                keyboard_interrupt()
+                keyboard_interrupt(table_file)
         if get_size(constants.RUNFOLDER) != size:
             table = update_table_contence(table)
             table = update_table_status(table)

@@ -47,7 +47,7 @@ def image_process(source_path: str):
     if not os.path.exists(os.path.join(dir, 'raw')):
         os.mkdir(os.path.join(dir, 'raw'))
 
-    if not os.path.exists(os.path.join(dir, 'raw')):
+    if not os.path.exists(os.path.join(dir, 'processed')):
         os.mkdir(os.path.join(dir, 'processed'))
 
     if 'raw' in source_path:
