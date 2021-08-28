@@ -40,7 +40,7 @@ def smart_Gscale(img: np.array) -> np.array:
 
     # return grey scale matrix
     img = V.reshape(img.shape[:2])
-    img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
+    _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
     return img
 
 # this is the binarythaitian that works!!:
