@@ -9,8 +9,17 @@ from keras.preprocessing.image import ImageDataGenerator
 
 
 # gets an img name and returns only the volt
-def get_volt_from_img_name(name:str)->float:
+def get_volt_from_img_name(name:str) -> float:
     return float(name.split('_')[-1].replace('.png',''))
+
+
+# count number of inputs in the run directory
+def dataset_size(runs_path: str) -> int:
+    data_size = 0
+    for run in os.listdir(runs_path):
+        run_images = os.listdir(os.path.join(runs_path, run))
+        data_size += len(run_images)-1
+    return data_size
 
 
 def reshape_for_net(img, resized_width:int=None, resized_height:int=None):
@@ -93,7 +102,7 @@ def data_generator(all_runs_path: str, batchSize: int, train_mode: bool = True,
                     inputs[i], outputs[i] = next(data_iter)
                 else:
                     raise StopIteration
-        yield inputs, outputs
+        yield (np.array(inputs, dtype='float32'), np.array(outputs, dtype='float32'))
 
 
 if __name__ == '__main__':
