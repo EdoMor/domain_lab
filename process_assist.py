@@ -50,13 +50,13 @@ def image_process(source_path: str):
     if not os.path.exists(os.path.join(dir, 'raw')):
         os.mkdir(os.path.join(dir, 'processed'))
 
-        if 'raw' in source_path:
-            destination_path = source_path.replace('raw',
-                                                   'processed')  # TODO: protect agaist 'raw' apearing more then once
-        else:
-            os.rename(source_path, os.path.join(dir, 'raw', filename))
-            source_path =os.path.join(dir, 'raw', filename)
-            destination_path = source_path.replace('raw', 'processed')
+    if 'raw' in source_path:
+        destination_path = source_path.replace('raw',
+                                                'processed')  # TODO: protect agaist 'raw' apearing more then once
+    else:
+        os.rename(source_path, os.path.join(dir, 'raw', filename))
+        source_path =os.path.join(dir, 'raw', filename)
+        destination_path = source_path.replace('raw', 'processed')
 
     img = cv2.imread(source_path)
     if len(img.shape) != 2:  # TODO: see if the smart Gscale can be used (it currently cannot)
