@@ -10,6 +10,22 @@ import process_image
 import constants
 from pprint import pprint
 import time
+import keyboard
+
+KEY_COMBO='ctrl+r+t+i+p'
+
+
+def keyboard_interrupt():
+    while 1:
+        print('interrupt mode[try typing help]:\n')
+        uinput=input('>>> ')
+        if uinput=='help':
+            print ('''type help to print this
+            search_table(table_file, column: str, phrase: str): search the table (obviosly)
+            get_size(start_path: str): -> size(int): get number of files in folder
+            table,_ = open_table(table_file) -> (pd.DataFrame, str): then use [table] to see whats inside
+            break(): to stop just break(), u know?''')
+        eval(uinput)
 
 
 def hashfile(path):
@@ -20,7 +36,7 @@ def hashfile(path):
 
 def create_table(path):
     files = [os.path.join(root, name) for root, dirs, files in os.walk(constants.RUNFOLDER) for name in files if
-             'raw' in os.path.join(root, name)]
+             ((not 'processed' in os.path.join(root, name)) and name.endswith('.png'))]
     ptable = pd.DataFrame(columns=['hash', 'path', 'name', 'status'])
     for i in range(len(files)):
         ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
@@ -29,6 +45,7 @@ def create_table(path):
 
 
 def open_table(path) -> (pd.DataFrame, str):
+    print('opened table: ', path)
     return (pd.read_pickle(path), path)
 
 
@@ -36,11 +53,13 @@ def add_data(table: (pd.DataFrame, str), data: list) -> (pd.DataFrame, str):
     ptable = table[0]
     path = table[1]
     ptable = ptable.append(pd.DataFrame(data, columns=list(ptable.columns)), ignore_index=True)
+    print('added data: ', pd.DataFrame(data, columns=list(ptable.columns)))
     ptable.to_pickle(path)
     return (ptable, path)
 
 
 def update_table_status(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+    print('updating table status...')
     ptable = table[0]
     path = table[1]
     for i in range(len(ptable)):
@@ -53,14 +72,17 @@ def update_table_status(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
 
 
 def update_table_contence(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+    print('updating table...')
     ptable = table[0]
     path = table[1]
     files = [os.path.join(root, name) for root, dirs, files in os.walk(constants.RUNFOLDER) for name in files if
-             'raw' in os.path.join(root, name)]
+             ((not 'processed' in os.path.join(root, name)) and name.endswith('.png'))]
     for i in range(len(files)):
         if not files[i] in list(ptable['path'].values):
             ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
-    ptable.to_pickle(path)
+            ptable.to_pickle(path)
+            if keyboard.is_pressed(KEY_COMBO):
+                keyboard_interrupt()
     return (ptable, path)
 
 
@@ -81,14 +103,16 @@ def search_table(table: (pd.DataFrame, str), column: str, phrase: str) -> pd.Dat
 
 
 def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
-    print('processing')
+    print('processing...')
     ptable = table[0]
     path = table[1]
     for i in range(len(ptable)):
         if ptable['status'].loc[i] == 'unprocessed':
             process_assist.image_process(ptable['path'].loc[i])
             ptable['status'].loc[i] = 'processed'
-    ptable.to_pickle(path)
+        ptable.to_pickle(path)
+        if keyboard.is_pressed(KEY_COMBO):
+            keyboard_interrupt()
     return (ptable, path)
 
 
@@ -108,15 +132,19 @@ def get_size(start_path: str) -> int:
 #     print(p)
 
 def main():
-    if not os.path.exists('./t1_not_a_virus'):
-        create_table('./t1_not_a_virus')
-    table = open_table('./t1_not_a_virus')
+    table_file='./ptable'
+    if not os.path.exists(table_file):
+        create_table(table_file)
+    table = open_table(table_file)
     table = update_table_contence(table)
     table = update_table_status(table)
     table = process_table(table)
     while 1:
-        time.sleep(60 * 5)
         size = get_size(constants.RUNFOLDER)
+        start=time.time()
+        while time.time()-start<=(60 * 5):
+            if keyboard.is_pressed(KEY_COMBO):
+                keyboard_interrupt()
         if get_size(constants.RUNFOLDER) != size:
             table = update_table_contence(table)
             table = update_table_status(table)
