@@ -69,7 +69,7 @@ pred_output = reshape_for_net(cv2.imread(os.path.join(TEST_PATH,'run1',pred_inpu
 prediction = model.predict(pred_input)
 
 
-# Construct a figure for the original and new frames.
+# visualize the prediction.
 fig, axes = plt.subplots(3, 1, figsize=(20, 4))
 
 # Plot the input frame.
