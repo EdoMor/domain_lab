@@ -7,6 +7,9 @@ import constants
 import pca
 import process_image
 
+import matplotlib.pyplot as plt
+
+
 JRAW = constants.JRAW
 JPROCESSED = constants.JPROCESSED
 join = os.path.join
@@ -48,6 +51,7 @@ def image_process(source_path: str):
         process_image.mkdir(os.path.dirname(destination_path))
 
     img = cv2.imread(source_path)
+    img=img[10:-10,10:-10]
     if len(img.shape) != 2:  # TODO: see if the smart Gscale can be used (it currently cannot)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     img = pca.gaussian_blur_otzu(img)

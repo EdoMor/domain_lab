@@ -118,6 +118,7 @@ def search_table(table: (pd.DataFrame, str), column: str, phrase: str) -> pd.Dat
 
 
 def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+    p=1
     print('processing...')
     ptable = table[0]
     path = table[1]
@@ -126,6 +127,9 @@ def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
             process_assist.image_process(ptable['path'].loc[i])
             ptable['status'].loc[i] = 'processed'
         ptable.to_pickle(path)
+        if (i%500==0 or p!=int(100*(i+1)/len(ptable))) and i>100:
+            print('processed {} images thats {}%'.format(i+1,int(100*(i+1)/len(ptable))))
+            p=int(100*(i+1)/len(ptable))
         if keyboard.is_pressed(KEY_COMBO):
             keyboard_interrupt(path)
     print('done processing')
