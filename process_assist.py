@@ -5,6 +5,7 @@ import cv2
 import os
 import constants
 import pca
+import process_image
 
 JRAW = constants.JRAW
 JPROCESSED = constants.JPROCESSED
@@ -42,21 +43,9 @@ def file_name_T_H_M(img: Image, H: float, counter=None) -> str:
 
 
 def image_process(source_path: str):
-    dir = os.path.dirname(source_path)
-    filename = os.path.split(source_path)[-1]
-    if not os.path.exists(os.path.join(dir, 'raw')):
-        os.mkdir(os.path.join(dir, 'raw'))
-
-    if not os.path.exists(os.path.join(dir, 'processed')):
-        os.mkdir(os.path.join(dir, 'processed'))
-
-    if 'raw' in source_path:
-        destination_path = source_path.replace('raw',
-                                                'processed')  # TODO: protect agaist 'raw' apearing more then once
-    else:
-        os.rename(source_path, os.path.join(dir, 'raw', filename))
-        source_path =os.path.join(dir, 'raw', filename)
-        destination_path = source_path.replace('raw', 'processed')
+    destination_path = source_path.replace('runs', 'runs_processed')
+    if not os.path.exists(os.path.dirname(destination_path)):
+        process_image.mkdir(os.path.dirname(destination_path))
 
     img = cv2.imread(source_path)
     if len(img.shape) != 2:  # TODO: see if the smart Gscale can be used (it currently cannot)

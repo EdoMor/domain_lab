@@ -12,7 +12,7 @@ from pprint import pprint
 import time
 import keyboard
 
-KEY_COMBO='ctrl+r+t+i+p'
+KEY_COMBO='ctrl+i'
 
 
 def keyboard_interrupt(table_file):
@@ -43,12 +43,19 @@ def hashfile(path):
 
 
 def create_table(path):
+    p=1
+    print('creating table...')
     files = [os.path.join(root, name) for root, dirs, files in os.walk(constants.RUNFOLDER) for name in files if
              ((not 'processed' in os.path.join(root, name)) and name.endswith('.png'))]
-    ptable = pd.DataFrame(columns=['hash', 'path', 'name', 'status'])
+    print('mapped files')
+    ptable = pd.DataFrame(np.zeros([len(files),4]),columns=['hash', 'path', 'name', 'status'])
     for i in range(len(files)):
         ptable.loc[i] = ([hashfile(files[i]), files[i], files[i].rsplit('\\', 1)[-1], 'unprocessed'])
+        if (i%500==0 or p!=int(100*(i+1)/len(files))) and i>100:
+            print('added {} images thats {}%'.format(i+1,int(100*(i+1)/len(files))))
+            p=int(100*(i+1)/len(files))
     ptable.to_pickle(path)
+    print('done creating table')
     return (ptable, path)
 
 
