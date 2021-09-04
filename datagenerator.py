@@ -1,14 +1,8 @@
 import random
-
-from PIL import Image, ImageEnhance
 import numpy as np
 import cv2
 import os
 from shutil import move
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow import keras
-from keras.preprocessing.image import ImageDataGenerator
 
 
 # gets an img name and returns only the volt
@@ -114,7 +108,7 @@ def split_data_to_train_valid_test(data_path, train_percent: float = 0.8,
     join = os.path.join
     from_to = lambda file, folder: move(join(data_path, file), join(data_path, folder, file))
     if train_percent + test_percent >= 1:
-        raise 'in-valid percentages. percentages need to be in range 0 to 1 and add up to *less* than 1.'
+        raise Exception('in-valid percentages. percentages need to be in range 0 to 1 and add up to *less* than 1.')
     runs = os.listdir(data_path)
     random.shuffle(runs)
     length = len(runs)
@@ -132,5 +126,5 @@ def split_data_to_train_valid_test(data_path, train_percent: float = 0.8,
 
 
 if __name__ == '__main__':
-   data_path = r'C:\Users\hadar\Desktop\Advanced_Lab\my_runs'
+   data_path = r'H:\runs_processed'
    split_data_to_train_valid_test(data_path)
