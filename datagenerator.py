@@ -134,6 +134,5 @@ def revers_split_data_to_train_valid_test(data_path: str, dest_path: str):
 
 
 if __name__ == '__main__':
-   data_path = r'C:\Users\hadar\Desktop\test'
-   dst = r'C:\Users\hadar\Desktop\dst'
-   revers_split_data_to_train_valid_test(data_path, data_path)
+   data_path = r'H:\runs_processed'
+   split_data_to_train_valid_test(data_path)
