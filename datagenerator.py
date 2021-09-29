@@ -47,7 +47,7 @@ def img_from_output(output: np.array, resized_width: int, resized_height: int) -
     return output.reshape([resized_width, resized_height]) * 255
 
 
-def next_data(all_runs_path: str, resized_width: int = None, resized_height: int = None):
+def next_data(all_runs_path: str, resized_width: int = None, resized_height: int = None, add_voltge=True,just_voltage=False):
     """
     :return: the next data pair: (input, output)
              the data will all resize to dim : (resized_width, resized_height),
@@ -73,7 +73,10 @@ def next_data(all_runs_path: str, resized_width: int = None, resized_height: int
                 output_img_path = os.path.join(run_path, output_img_name)
                 output = reshape_for_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                          resized_height)
-                input = add_volts(reshaped_input, input_volt, output_volt)
+                if add_voltge:
+                    input = add_volts(reshaped_input, input_volt, output_volt)
+                if just_voltage:
+                    input = np.array[input_volt, output_volt, output_volt - input_volt]
                 yield input, output
                 input_volt = output_volt
                 reshaped_input = output
@@ -101,6 +104,28 @@ def data_generator(all_runs_path: str, batchSize: int, train_mode: bool = True,
                 else:
                     raise StopIteration
         yield np.array(inputs, dtype='float32'), np.array(outputs, dtype='float32')
+
+
+def x_data_generator(all_runs_path: str, batchSize: int, train_mode: bool = True,
+                   resized_width: int = None, resized_height: int = None):
+    '''
+    :return: a bach of data(input,output) from the all_runs_path dir,
+             in the size of batchSize.
+    '''
+    data_iter = next_data(all_runs_path, resized_width, resized_height)
+    while True:
+        inputs = [0] * batchSize
+        outputs = [0] * batchSize
+        for i in range(batchSize):
+            try:
+                inputs[i], outputs[i] = next(data_iter)
+            except StopIteration:
+                if train_mode:  # todo: find out if we need to raise Error or yield an empty list
+                    data_iter = next_data(all_runs_path, resized_width, resized_height)
+                    inputs[i], outputs[i] = next(data_iter)
+                else:
+                    raise StopIteration
+        yield np.array([np.array(inputs, dtype='float32')[:-3],np.array(inputs, dtype='float32')[-3:]]), np.array(outputs, dtype='float32')
 
 
 def split_data_to_train_valid_test(data_path, train_percent: float = 0.8,
