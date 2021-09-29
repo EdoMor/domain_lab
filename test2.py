@@ -104,7 +104,12 @@ def my_fit(train_inputs, train_output, valid_inputs, valid_output, batch_size=32
 #           validation_data=validation_generator,
 #           validation_steps=VALIDATION_STEPS)
 #
-#
-#
+
+def my_loss(y_true,y_pred):
+    crossentropy_loss = tf.keras.metrics.binary_crossentropy(y_true, y_pred)
+    sum_loss = np.abs(np.sum(y_true, 1) - np.sum(y_pred, 1))
+    return crossentropy_loss + sum_loss
+
+
 
 if __name__ == '__main__':
