@@ -32,6 +32,7 @@ def reshape_for_cnn_net(img, resized_width: int = None, resized_height: int = No
     # ensures all images be the same size:
     if resized_height is not None:
         img = cv2.resize(img, (resized_width, resized_height))
+        img = np.reshape(img, (resized_width, resized_height,1))
     # tern img to zeros and ones:
     img = img / 255
     return img
@@ -129,12 +130,14 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                 break
             while True:
                 try:
+                    print('ha')
                     output_img_name = next(run_iter).name
                     output_volt = get_volt_from_img_name(output_img_name)
                     output_img_path = os.path.join(run_path, output_img_name)
                     output = np.array(reshape_for_cnn_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                              resized_height), dtype='float32')
-                    data_input = (np.array(reshaped_input, dtype='float32') ,np.array([input_volt, output_volt, output_volt-input_volt],                                                                                    dtype='float32'))
+                    data_input = (np.array(reshaped_input, dtype='float32') ,
+                                  np.array([input_volt, output_volt, output_volt-input_volt],                                                                                    dtype='float32'))
                     counter+=1
                     print(counter, flush=True)
                     yield data_input, output
@@ -146,6 +149,41 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
 
                 
 def data_generator_for_cnn(all_runs_path: str, batchSize: int, train_mode: bool = True,
+                   resized_width: int = None, resized_height: int = None, add_voltge:bool=True, 
+                   just_voltage:bool=False):
+    '''
+    :return: a bach of data(input,output) from the all_runs_path dir,
+             in the size of batchSize.
+    '''
+    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height)()
+    while True:
+        inputs1 = [0] * batchSize
+        inputs2 = [0] * batchSize
+        outputs = [0] * batchSize
+        for i in range(batchSize):
+            try:
+                my_2_inputs , outputs[i] = next(data_iter)
+                inputs1[i] = my_2_inputs[0]
+                inputs2[i] = my_2_inputs[1]
+            except StopIteration:
+                if train_mode:  # todo: find out if we need to raise Error or yield an empty list
+                    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height)()
+                    my_2_inputs , outputs[i] = next(data_iter)
+                    inputs1[i] = my_2_inputs[0]
+                    inputs2[i] = my_2_inputs[1]
+                else:
+                    raise StopIteration
+#         output = np.array(outputs)
+#         for i in range(2):
+#             print(inputs[0][i].shape)
+#             print(inputs[0][i])
+#         print(output[0].shape)
+#         print(output[0])
+#         print(flush=True)
+
+        yield [np.array(inputs1, dtype='float32'), np.array(inputs2, dtype='float32')] , np.array(outputs , dtype='float32')
+        
+def data_generator_for_cnn2(all_runs_path: str, batchSize: int, train_mode: bool = True,
                    resized_width: int = None, resized_height: int = None, add_voltge:bool=True, 
                    just_voltage:bool=False):
     '''
@@ -166,7 +204,8 @@ def data_generator_for_cnn(all_runs_path: str, batchSize: int, train_mode: bool 
                 else:
                     raise StopIteration
         yield inputs, np.array(outputs , dtype='float32')
-        
+
+    
         
 def my_fit(model, train_inputs_and_output_gen, valid_inputs_and_output_gen, batch_size=32, epochs: int = 1):
     """
@@ -177,11 +216,20 @@ def my_fit(model, train_inputs_and_output_gen, valid_inputs_and_output_gen, batc
         flag = True
         while flag:
             try:
+                # [array(images), array(size3)], array(images)
                 next_bach_of_training_data = next(train_inputs_and_output_gen)
+                print("all images: ", next_bach_of_training_data[0][0].shape)
+                print("all size 3: ",next_bach_of_training_data[0][1].shape)
+                print("image: ", next_bach_of_training_data[0][0][0].shape)
+                print("size3: ",next_bach_of_training_data[0][1][0].shape)
+                print("all image", next_bach_of_training_data[1].shape)
+                print("image", next_bach_of_training_data[1][0].shape)
+                
                 model.fit(x = next_bach_of_training_data[0],
                           y = next_bach_of_training_data[1],
                           batch_size = batch_size,
-                          use_multiprocessing = True)
+                          use_multiprocessing = True,
+                         )
             except StopIteration:
                 while flag:
                     try:
