@@ -12,8 +12,8 @@ from datagenerator import *
 
 
 # constants:
-RESIZED_WIDTH = 100  # temp
-RESIZED_HEIGHT = 100  # temp
+RESIZED_WIDTH = 120  # temp
+RESIZED_HEIGHT = 120  # temp
 RESIZED_NUM_PIXELS = RESIZED_WIDTH * RESIZED_HEIGHT
 SHAPE = RESIZED_NUM_PIXELS + 3
 TRAIN_PATH = r'C:\Users\hadar\Desktop\Advanced_Lab\run_1_data\train_valid_test\train'  # temp
@@ -62,9 +62,9 @@ input_volt = get_volt_from_img_name(pred_input_name)
 pred_output_name = r'1628592558.9303007_2.85834.png'
 output_volt = get_volt_from_img_name(pred_output_name)
 pred_input = img_to_input(cv2.imread(os.path.join(TEST_PATH,'run1',pred_input_name), cv2.IMREAD_GRAYSCALE),
-                          input_volt, output_volt, resized_width, resized_height)
+                          input_volt, output_volt, RESIZED_WIDTH, RESIZED_HEIGHT)
 pred_output = reshape_for_net(cv2.imread(os.path.join(TEST_PATH,'run1',pred_input_name), cv2.IMREAD_GRAYSCALE),
-                              resized_width, resized_height)
+                              RESIZED_WIDTH, RESIZED_HEIGHT)
 
 prediction = model.predict(pred_input)
 
