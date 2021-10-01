@@ -110,6 +110,4 @@ def my_loss(y_true,y_pred):
     sum_loss = np.abs(np.sum(y_true, 1) - np.sum(y_pred, 1))
     return crossentropy_loss + sum_loss
 
-
-
 if __name__ == '__main__':
