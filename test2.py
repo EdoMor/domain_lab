@@ -111,3 +111,4 @@ def my_loss(y_true,y_pred):
     return crossentropy_loss + sum_loss
 
 if __name__ == '__main__':
+    cv2.imread('./test').shape

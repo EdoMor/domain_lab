@@ -25,16 +25,18 @@ def reshape_for_net(img, resized_width: int = None, resized_height: int = None):
         img = cv2.resize(img, (resized_width, resized_height))
     # tern img to zeros and ones:
     img = img / 255
+    _, img = cv2.threshold(img, 0.5 , 255, cv2.THRESH_BINARY)
     # flatten img to a vector
     return img.flatten()
 
-def reshape_for_cnn_net(img, resized_width: int = None, resized_height: int = None):
+def reshape_for_net_no_flatening(img, resized_width: int = None, resized_height: int = None):
     # ensures all images be the same size:
     if resized_height is not None:
         img = cv2.resize(img, (resized_width, resized_height))
         img = np.reshape(img, (resized_width, resized_height,1))
     # tern img to zeros and ones:
     img = img / 255
+    _, img = cv2.threshold(img, 0.5 , 255, cv2.THRESH_BINARY)
     return img
 
 
@@ -116,7 +118,6 @@ def data_generator(all_runs_path: str, batchSize: int, train_mode: bool = True,
 
 def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resized_height: int = None):       
     def next_data_for_cnn():
-        counter = 0
         for run in os.listdir(all_runs_path):
             run_path = os.path.join(all_runs_path, run)
             run_iter = os.scandir(run_path)
@@ -124,25 +125,22 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                 input_img_name = next(run_iter).name
                 input_volt = get_volt_from_img_name(input_img_name)
                 input_img_path = os.path.join(run_path, input_img_name)
-                reshaped_input = reshape_for_cnn_net(cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
+                reshaped_input = reshape_for_net_no_flatening(cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                                  resized_height)
             except StopIteration:
                 break
             while True:
                 try:
-                    print('ha')
                     output_img_name = next(run_iter).name
                     output_volt = get_volt_from_img_name(output_img_name)
                     output_img_path = os.path.join(run_path, output_img_name)
-                    output = np.array(reshape_for_cnn_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
+                    output = np.array(reshape_for_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                              resized_height), dtype='float32')
                     data_input = (np.array(reshaped_input, dtype='float32') ,
-                                  np.array([input_volt, output_volt, output_volt-input_volt],                                                                                    dtype='float32'))
-                    counter+=1
-                    print(counter, flush=True)
+                                  np.array([input_volt, output_volt, output_volt-input_volt], dtype='float32'))   
                     yield data_input, output
                     input_volt = output_volt
-                    reshaped_input = output
+                    reshaped_input = np.reshape(output, (resized_width, resized_height,1))
                 except StopIteration:
                     break
     return next_data_for_cnn
@@ -173,15 +171,10 @@ def data_generator_for_cnn(all_runs_path: str, batchSize: int, train_mode: bool 
                     inputs2[i] = my_2_inputs[1]
                 else:
                     raise StopIteration
-#         output = np.array(outputs)
-#         for i in range(2):
-#             print(inputs[0][i].shape)
-#             print(inputs[0][i])
-#         print(output[0].shape)
-#         print(output[0])
-#         print(flush=True)
-
-        yield [np.array(inputs1, dtype='float32'), np.array(inputs2, dtype='float32')] , np.array(outputs , dtype='float32')
+        a = np.array(inputs1, dtype='float32')
+        b = np.array(inputs2, dtype='float32')
+        c = np.array(outputs , dtype='float32')
+        yield [a, b], c
         
 def data_generator_for_cnn2(all_runs_path: str, batchSize: int, train_mode: bool = True,
                    resized_width: int = None, resized_height: int = None, add_voltge:bool=True, 
@@ -218,12 +211,6 @@ def my_fit(model, train_inputs_and_output_gen, valid_inputs_and_output_gen, batc
             try:
                 # [array(images), array(size3)], array(images)
                 next_bach_of_training_data = next(train_inputs_and_output_gen)
-                print("all images: ", next_bach_of_training_data[0][0].shape)
-                print("all size 3: ",next_bach_of_training_data[0][1].shape)
-                print("image: ", next_bach_of_training_data[0][0][0].shape)
-                print("size3: ",next_bach_of_training_data[0][1][0].shape)
-                print("all image", next_bach_of_training_data[1].shape)
-                print("image", next_bach_of_training_data[1][0].shape)
                 
                 model.fit(x = next_bach_of_training_data[0],
                           y = next_bach_of_training_data[1],
