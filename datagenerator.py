@@ -25,7 +25,7 @@ def reshape_for_net(img, resized_width: int = None, resized_height: int = None):
         img = cv2.resize(img, (resized_width, resized_height))
     # tern img to zeros and ones:
     img = img / 255
-    _, img = cv2.threshold(img, 0.5 , 255, cv2.THRESH_BINARY)
+    _, img = cv2.threshold(img, 0.5 , 1, cv2.THRESH_BINARY)
     # flatten img to a vector
     return img.flatten()
 
@@ -33,10 +33,9 @@ def reshape_for_net_no_flatening(img, resized_width: int = None, resized_height:
     # ensures all images be the same size:
     if resized_height is not None:
         img = cv2.resize(img, (resized_width, resized_height))
-        img = np.reshape(img, (resized_width, resized_height,1))
-    # tern img to zeros and ones:
-    img = img / 255
-    _, img = cv2.threshold(img, 0.5 , 255, cv2.THRESH_BINARY)
+        img = img / 255
+        _, img = cv2.threshold(img, 0.5 , 1, cv2.THRESH_BINARY)
+        img = np.reshape(img, (resized_width, resized_height, 1))
     return img
 
 
@@ -140,7 +139,7 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                                   np.array([input_volt, output_volt, output_volt-input_volt], dtype='float32'))   
                     yield data_input, output
                     input_volt = output_volt
-                    reshaped_input = np.reshape(output, (resized_width, resized_height,1))
+                    reshaped_input = np.reshape(output, (resized_width, resized_height, 1))
                 except StopIteration:
                     break
     return next_data_for_cnn
