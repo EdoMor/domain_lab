@@ -19,9 +19,10 @@ def dataset_size(runs_path: str) -> int:
     return data_size
 
 
-def reshape_for_net(img, resized_width: int = None, resized_height: int = None):
+def reshape_for_net(img, resized_width: int = None, resized_height: int = None, crop=None):
     # ensures all images be the same size:
     if resized_height is not None:
+        img = img[crop[0][0]:crop[0][1], crop[1][0]:crop[1][1]]
         img = cv2.resize(img, (resized_width, resized_height))
     # tern img to zeros and ones:
     img = img / 255
@@ -29,9 +30,12 @@ def reshape_for_net(img, resized_width: int = None, resized_height: int = None):
     # flatten img to a vector
     return img.flatten()
 
-def reshape_for_net_no_flatening(img, resized_width: int = None, resized_height: int = None):
+def reshape_for_net_no_flatening(img, resized_width: int = None, resized_height: int = None, crop=None):
+    '''crop = [[x start, x end],[y start,y end]]'''
     # ensures all images be the same size:
     if resized_height is not None:
+        if crop != None:
+            img=img[crop[0][0]:crop[0][1],crop[1][0]:crop[1][1]]
         img = cv2.resize(img, (resized_width, resized_height))
         img = img / 255
         _, img = cv2.threshold(img, 0.5 , 1, cv2.THRESH_BINARY)
@@ -74,6 +78,7 @@ def next_data(all_runs_path: str, resized_width: int = None, resized_height: int
             input_img_path = os.path.join(run_path, input_img_name)
             reshaped_input = reshape_for_net(cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                              resized_height)
+
         except StopIteration:
             break
         while True:
@@ -83,6 +88,7 @@ def next_data(all_runs_path: str, resized_width: int = None, resized_height: int
                 output_img_path = os.path.join(run_path, output_img_name)
                 output = reshape_for_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
                                          resized_height)
+
                 if add_voltge:
                     data_input = add_volts(reshaped_input, input_volt, output_volt)
                 if just_voltage:
@@ -115,7 +121,8 @@ def data_generator(all_runs_path: str, batchSize: int, train_mode: bool = True,
                     raise StopIteration
         yield np.array(inputs, dtype='float32'), np.array(outputs, dtype='float32')
 
-def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resized_height: int = None):       
+def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resized_height: int = None, crop=None):
+    '''crop = [[x start, x end],[y start,y end]]'''
     def next_data_for_cnn():
         for run in os.listdir(all_runs_path):
             run_path = os.path.join(all_runs_path, run)
@@ -125,7 +132,7 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                 input_volt = get_volt_from_img_name(input_img_name)
                 input_img_path = os.path.join(run_path, input_img_name)
                 reshaped_input = reshape_for_net_no_flatening(cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
-                                                 resized_height)
+                                                 resized_height, crop=crop)
             except StopIteration:
                 break
             while True:
@@ -134,7 +141,7 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                     output_volt = get_volt_from_img_name(output_img_name)
                     output_img_path = os.path.join(run_path, output_img_name)
                     output = np.array(reshape_for_net(cv2.imread(output_img_path, cv2.IMREAD_GRAYSCALE), resized_width,
-                                             resized_height), dtype='float32')
+                                             resized_height, crop=crop), dtype='float32')
                     data_input = (np.array(reshaped_input, dtype='float32') ,
                                   np.array([input_volt, output_volt, output_volt-input_volt], dtype='float32'))   
                     yield data_input, output
@@ -144,28 +151,39 @@ def creat_next_data_for_cnn(all_runs_path: str, resized_width: int = None, resiz
                     break
     return next_data_for_cnn
 
-                
+import numpy as np
 def data_generator_for_cnn(all_runs_path: str, batchSize: int, train_mode: bool = True,
                    resized_width: int = None, resized_height: int = None, add_voltge:bool=True, 
-                   just_voltage:bool=False):
+                   just_voltage:bool=False, crop=None, noise=0):
     '''
+    crop = [[x start, x end],[y start,y end]]
+
     :return: a bach of data(input,output) from the all_runs_path dir,
              in the size of batchSize.
     '''
-    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height)()
+    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height, crop=crop)()
     while True:
         inputs1 = [0] * batchSize
         inputs2 = [0] * batchSize
         outputs = [0] * batchSize
+
         for i in range(batchSize):
+
             try:
                 my_2_inputs , outputs[i] = next(data_iter)
+                noise = np.random.normal(np.average(outputs), 1, len(outputs[i])) * noise
+
+                outputs[i] += noise
                 inputs1[i] = my_2_inputs[0]
                 inputs2[i] = my_2_inputs[1]
             except StopIteration:
                 if train_mode:  # todo: find out if we need to raise Error or yield an empty list
-                    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height)()
+                    data_iter = creat_next_data_for_cnn(all_runs_path, resized_width, resized_height, crop=crop)()
                     my_2_inputs , outputs[i] = next(data_iter)
+                    noise = np.random.normal(np.average(outputs), 1, len(outputs[i])) * noise
+
+                    outputs[i] += noise
+
                     inputs1[i] = my_2_inputs[0]
                     inputs2[i] = my_2_inputs[1]
                 else:
