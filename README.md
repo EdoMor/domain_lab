@@ -62,4 +62,5 @@ image and saves the result to the same path as the file with the word runs repla
 (see **our** predetermined file structure)
 
 arguments:
+
 path: path to image to be processed
