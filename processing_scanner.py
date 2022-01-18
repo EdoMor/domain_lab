@@ -1,5 +1,6 @@
 from hashlib import sha512, md5
 import os
+import typing
 import PIL as pl
 import numpy as np
 import pandas as pd
@@ -59,12 +60,12 @@ def create_table(path):
     return (ptable, path)
 
 
-def open_table(path) -> (pd.DataFrame, str):
+def open_table(path) -> typing.Tuple[pd.DataFrame, str]:
     print('opened table: ', path)
     return (pd.read_pickle(path), path)
 
 
-def add_data(table: (pd.DataFrame, str), data: list) -> (pd.DataFrame, str):
+def add_data(table: typing.Tuple[pd.DataFrame, str], data: list) -> typing.Tuple[pd.DataFrame, str]:
     ptable = table[0]
     path = table[1]
     ptable = ptable.append(pd.DataFrame(data, columns=list(ptable.columns)), ignore_index=True)
@@ -73,7 +74,7 @@ def add_data(table: (pd.DataFrame, str), data: list) -> (pd.DataFrame, str):
     return (ptable, path)
 
 
-def update_table_status(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+def update_table_status(table: typing.Tuple[pd.DataFrame, str]) -> typing.Tuple[pd.DataFrame, str]:
     print('updating table status...')
     ptable = table[0]
     path = table[1]
@@ -86,7 +87,7 @@ def update_table_status(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
     return (ptable, path)
 
 
-def update_table_contence(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+def update_table_contence(table: typing.Tuple[pd.DataFrame, str]) -> typing.Tuple[pd.DataFrame, str]:
     print('updating table...')
     ptable = table[0]
     path = table[1]
@@ -101,7 +102,7 @@ def update_table_contence(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
     return (ptable, path)
 
 
-def search_table(table: (pd.DataFrame, str), column: str, phrase: str) -> pd.DataFrame or None:
+def search_table(table: typing.Tuple[pd.DataFrame, str], column: str, phrase: str) -> pd.DataFrame or None:
     ptable = table[0]
     path = table[1]
     results = pd.DataFrame(columns=list(ptable.columns))
@@ -117,7 +118,7 @@ def search_table(table: (pd.DataFrame, str), column: str, phrase: str) -> pd.Dat
             return results
 
 
-def process_table(table: (pd.DataFrame, str)) -> (pd.DataFrame, str):
+def process_table(table: typing.Tuple[pd.DataFrame, str]) -> typing.Tuple[pd.DataFrame, str]:
     p=1
     print('processing...')
     ptable = table[0]

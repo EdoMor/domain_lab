@@ -79,3 +79,5 @@ hyst=Hysteron(func1:function,func2:function,α:float,β:float,starting_value:flo
 
 print(hyst(3))
 ```
+
+### a tool for continuously preforming image binarysation for all new data under a floder and manage inventory, image distance, deleted or missing files ⇾ processing_scanner.py
