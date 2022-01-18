@@ -5,7 +5,7 @@
 ### a tool to control a device using visa ⇾ device.py
 (this class was written with variable power supplies in mind)
 usage example:
-```
+```python
 import device
 
 with device.Device(index=None[optional int]) as dev:
@@ -64,3 +64,18 @@ image and saves the result to the same path as the file with the word runs repla
 arguments:
 
 path: path to image to be processed
+
+### functions for image processing that return an image and dont save it accordign to our predetermined file structure ⇾ pca.py
+
+`gaussian_blur_otzu(img:np.array) -> np.array`
+this the function that was used to create the Boolean image
+
+### a Hysteron variable type ⇾ Hysteron.py
+
+```python
+from hysteron import Hysteron
+
+hyst=Hysteron(func1:function,func2:function,α:float,β:float,starting_value:float)
+
+print(hyst(3))
+```
